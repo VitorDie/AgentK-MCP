@@ -1,16 +1,49 @@
-name: Deploy to AWS VM
+# O nome agora reflete o pipeline completo
+name: DevSecOps Deploy to AWS VM
 
 on:
   push:
     branches: [ master ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  # --- JOB 1: A PARTE "SEC" (SEGURANÇA) ---
+  # Este job roda primeiro para analisar o código.
+  security-scan:
+    name: Security Scan (CodeQL)
     runs-on: ubuntu-latest
-    environment: production 
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        # IMPORTANTE: Mude 'python' se a linguagem principal 
+        # do seu projeto for outra (ex: javascript, go, java)
+        languages: python 
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+      
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/perform@v3
+
+  # --- JOB 2: A PARTE "DEV" (DEPLOY) ---
+  # Este job só roda DEPOIS que o 'security-scan' passar.
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    # A LINHA MAIS IMPORTANTE DO DEVSECOPS:
+    # Diz ao GitHub para só fazer o deploy se o job 'security-scan'
+    # terminar com sucesso.
+    needs: [security-scan] 
+    
+    steps:
+    # --- Daqui para baixo, é o seu arquivo original ---
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -27,7 +60,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_VM_USER }}@${{ secrets.AWS_VM_HOST }} << 'EOF'
           set -e
-      
+        
           # Carregar variáveis do .bashrc
           source ~/.bashrc || true
           
@@ -43,7 +76,7 @@ jobs:
           # Parar serviços
           echo "Parando serviços..."
           docker-compose down --remove-orphans || true
-                    
+                      
           # Build e iniciar
           echo "Fazendo build e iniciando serviços..."
           docker-compose up -d --build
@@ -63,7 +96,7 @@ jobs:
         # Verificar se containers estão rodando
         ssh ${{ secrets.AWS_VM_USER }}@${{ secrets.AWS_VM_HOST }} "cd ~/AgentK-MCP && docker-compose ps | grep Up"
         
-               
+                
         for i in {1..5}; do
           echo "Verificando Streamlit - Tentativa $i/5..."
           if curl -f --max-time 10 http://${{ secrets.AWS_VM_HOST }}:8501; then
@@ -82,4 +115,4 @@ jobs:
       run: |
         echo "Deploy realizado com sucesso!"
         echo "Aplicação disponível em:"
-        echo "   - Cliente Web: http://${{ secrets.AWS_VM_HOST }}:8501"
+        echo "  - Cliente Web: http://${{ secrets.AWS_VM_HOST }}:8501"
