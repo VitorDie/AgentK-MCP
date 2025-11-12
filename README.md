@@ -126,4 +126,3 @@ docker-compose up --build -d
 **Orientador:** Professor Dr. Fábio Henrique Cabrini  
 **Instituição:** Faculdade Engenheiro Salvador Arena
 
----
