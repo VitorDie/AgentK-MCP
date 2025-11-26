@@ -75,11 +75,11 @@ jobs:
           
           # Parar serviços
           echo "Parando serviços..."
-          docker-compose down --remove-orphans || true
+          docker compose down --remove-orphans || true
                       
           # Build e iniciar
           echo "Fazendo build e iniciando serviços..."
-          docker-compose up -d --build
+          docker compose up -d --build
           
           echo "Deploy concluído!"
         EOF
@@ -94,7 +94,7 @@ jobs:
         echo "Verificando saúde da aplicação..."
         
         # Verificar se containers estão rodando
-        ssh ${{ secrets.AWS_VM_USER }}@${{ secrets.AWS_VM_HOST }} "cd ~/AgentK-MCP && docker-compose ps | grep Up"
+        ssh ${{ secrets.AWS_VM_USER }}@${{ secrets.AWS_VM_HOST }} "cd ~/AgentK-MCP && docker compose ps | grep Up"
         
                 
         for i in {1..5}; do
