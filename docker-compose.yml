@@ -1,5 +1,4 @@
 services:
-  # Servidor MCP AgentK
   agentk-server:
     build:
       context: ./server
@@ -11,23 +10,17 @@ services:
       - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
       - FASTMCP_HOST=${FASTMCP_HOST:-0.0.0.0}
       - FASTMCP_PORT=${FASTMCP_PORT:-3333}
-      - FASTMCP_LOG_LEVEL=${FASTMCP_LOG_LEVEL:-INFO}
       - KUBECONFIG=/app/config
-      # Passar variáveis do .env se existirem
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
-      # Windows (ajuste conforme necessário)
-      # - ~/.kube/:/app/.kube/:ro
-      # - ~/.minikube:/app/.minikube:ro
-
-      # Linux (comente se estiver usando Windows)
-      - ~/.kube/config-embedded:/app/config:ro
+      - /home/ftt_grupotcc2026_1/AgentK-MCP/kubeconfig:/app/config:ro
     networks:
       - agentk-network
-      - minikube
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "app/main.py", "--port", "3333"]
 
-  # Cliente Streamlit AgentK
   agentk-client:
     build:
       context: ./client
@@ -39,9 +32,10 @@ services:
       - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
       - STREAMLIT_SERVER_HEADLESS=${STREAMLIT_SERVER_HEADLESS:-true}
       - STREAMLIT_SERVER_ENABLE_CORS=${STREAMLIT_SERVER_ENABLE_CORS:-false}
-      # Variável para conectar ao servidor MCP via HTTP
-      - MCP_SERVER_URL=${MCP_SERVER_URL:-http://agentk-server:3333}
-      # Chave da OpenAI (OBRIGATÓRIA - deve estar no .env)
+      # # URL raiz, como você confirmou que era o original:
+      # - MCP_SERVER_URL=${MCP_SERVER_URL:-http://agentk-server:3333}
+      # URL correta para o endpoint SSE
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-http://agentk-server:3333/sse}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
       - agentk-network
@@ -54,9 +48,6 @@ networks:
   agentk-network:
     driver: bridge
     name: agentk-network
-  minikube:
-    external: true
-    name: minikube
 
 volumes:
   agentk-logs:

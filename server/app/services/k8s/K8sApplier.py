@@ -14,15 +14,23 @@ class K8sApplier:
         self._setup_k8s_client(config_file)
         self.k8s_extractor = K8sExtractor(config_file)
 
+    # def _setup_k8s_client(self, config_file: str = None):
+    #     """Configura cliente Kubernetes"""
+    #     if config_file:
+    #         config.load_kube_config(config_file=config_file)
+    #     else:
+    #         try:
+    #             config.load_incluster_config()
+    #         except:
+    #             config.load_kube_config()
+    #     
+    #     self.api_client = client.ApiClient()
+
     def _setup_k8s_client(self, config_file: str = None):
-        """Configura cliente Kubernetes"""
-        if config_file:
-            config.load_kube_config(config_file=config_file)
-        else:
-            try:
-                config.load_incluster_config()
-            except:
-                config.load_kube_config()
+        """Configura cliente Kubernetes. Força o uso do arquivo de configuração conhecido /app/config."""
+        
+        # Força o carregamento do arquivo que já provamos ser válido e montado.
+        config.load_kube_config(config_file="/app/config")
         
         self.api_client = client.ApiClient()
 

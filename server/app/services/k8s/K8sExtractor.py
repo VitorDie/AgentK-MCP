@@ -13,16 +13,29 @@ class K8sExtractor:
         self._load_config(resource_config_path)
         self._validate_resources(resources)
 
+    # def _setup_k8s_client(self, config_file: str = None):
+    #     """Configura cliente Kubernetes"""
+    #     if config_file:
+    #         config.load_kube_config(config_file=config_file)
+    #     else:
+    #         try:
+    #             config.load_incluster_config()
+    #         except:
+    #             config.load_kube_config()
+    #     
+    #     self.v1 = client.CoreV1Api()
+    #     self.apps_v1 = client.AppsV1Api()
+    #     self.networking_v1 = client.NetworkingV1Api()
+    #     self.batch_v1 = client.BatchV1Api()
+    #     self.auto_scaling_v1 = client.AutoscalingV1Api()
+
     def _setup_k8s_client(self, config_file: str = None):
-        """Configura cliente Kubernetes"""
-        if config_file:
-            config.load_kube_config(config_file=config_file)
-        else:
-            try:
-                config.load_incluster_config()
-            except:
-                config.load_kube_config()
+        """Configura cliente Kubernetes. Força o uso do arquivo de configuração conhecido /app/config."""
         
+        # Força o carregamento do arquivo que já provamos ser válido e montado.
+        config.load_kube_config(config_file="/app/config")
+        
+        # O restante do código de instanciação da API
         self.v1 = client.CoreV1Api()
         self.apps_v1 = client.AppsV1Api()
         self.networking_v1 = client.NetworkingV1Api()
